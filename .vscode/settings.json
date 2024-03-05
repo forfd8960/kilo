@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.rs": "rust",
+        "unistd.h": "c",
+        "termios.h": "c"
+    }
+}
