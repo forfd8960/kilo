@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include <ctype.h>
 
+/*** defines ***/
+#define CTRL_KEY(k) ((k) & 0x1f)
+
 /*** data ***/
 
 struct termios orig_termios;
@@ -39,11 +42,37 @@ void enableRawMode()
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
     // set a timeout for read, so read() returns if it doesn't get any input for a certain amount of time.
-    raw.c_cc[VMIN] = 0;  // set to 0, so that read returns as soon as there is any input to be read.
-    raw.c_cc[VTIME] = 1; // set 1/10 seconds, 100 milliseconds.
+    raw.c_cc[VMIN] = 0;   // set to 0, so that read returns as soon as there is any input to be read.
+    raw.c_cc[VTIME] = 10; // set 1/10 seconds, 100 milliseconds.
 
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 1)
         printAndExit("tcsetattr");
+}
+
+char editorReadKey()
+{
+    char c;
+    int nread;
+    while ((nread = read(STDIN_FILENO, &c, 1)) != 1)
+    {
+        if (nread == -1 && errno != EAGAIN)
+            printAndExit("read");
+    }
+    return c;
+}
+
+/*** input ***/
+
+void editorProcessKeypress()
+{
+    char c = editorReadKey();
+
+    switch (c)
+    {
+    case CTRL_KEY('q'):
+        exit(0);
+        break;
+    }
 }
 
 /*** init ***/
@@ -55,19 +84,7 @@ int main()
 
     while (1)
     {
-        char c = '\0';
-        if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
-            printAndExit("read");
-        if (iscntrl(c))
-        {
-            printf("%d\r\n", c);
-        }
-        else
-        {
-            printf("%d (%c)\r\n", c, c);
-        }
-        if (c == 'q')
-            break;
+        editorProcessKeypress();
     }
     return 0;
 }
