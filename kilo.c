@@ -23,13 +23,13 @@ void printAndExit(const char *s)
     exit(1);
 }
 
-void disableRawMode()
+void disableRawMode(void)
 {
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
         printAndExit("tcsetattr");
 }
 
-void enableRawMode()
+void enableRawMode(void)
 {
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
         printAndExit("tcgetattr");
@@ -49,7 +49,7 @@ void enableRawMode()
         printAndExit("tcsetattr");
 }
 
-char editorReadKey()
+char editorReadKey(void)
 {
     char c;
     int nread;
@@ -61,9 +61,15 @@ char editorReadKey()
     return c;
 }
 
+/*** output ***/
+void editorRefreshSceen(void)
+{
+    write(STDOUT_FILENO, "\x1b[2J", 4);
+}
+
 /*** input ***/
 
-void editorProcessKeypress()
+void editorProcessKeypress(void)
 {
     char c = editorReadKey();
 
@@ -77,13 +83,14 @@ void editorProcessKeypress()
 
 /*** init ***/
 
-int main()
+int main(void)
 {
 
     enableRawMode();
 
     while (1)
     {
+        editorRefreshSceen();
         editorProcessKeypress();
     }
     return 0;
