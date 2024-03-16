@@ -1,8 +1,6 @@
 ## Refresh Sceen
 
-```
-Escape sequences always start with an escape character (27) followed by a [ character. Escape sequences instruct the terminal to do various text formatting tasks, such as coloring text, moving the cursor around, and clearing parts of the screen.
-```
+Escape sequences always start with an escape character `(27)` followed by a `[` character. **Escape sequences instruct the terminal to do various text formatting tasks, such as coloring text, moving the cursor around, and clearing parts of the screen.**
 
 In C, `\x1b[2J` is an escape sequence that is used to clear the screen in a terminal or console window. This escape sequence is a combination of special characters that, when printed to the terminal, instruct the terminal to clear the screen.
 
