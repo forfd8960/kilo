@@ -5,6 +5,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -15,6 +16,8 @@
 
 struct editorConfig
 {
+    int screenrows;
+    int screencols;
     struct termios orig_termios;
 };
 
@@ -68,12 +71,28 @@ char editorReadKey(void)
     return c;
 }
 
+int getWindowSize(int *rows, int *cols)
+{
+    struct winsize ws;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+    {
+        return -1;
+    }
+    else
+    {
+        *rows = ws.ws_row;
+        *cols = ws.ws_col;
+        return 0;
+    }
+}
+
 /*** output ***/
 
 void editorDrawRows(void)
 {
     int y;
-    for (y = 0; y < 24; y++)
+    for (y = 0; y < E.screenrows; y++)
     {
         write(STDOUT_FILENO, "~\r\n", 3);
     }
@@ -107,10 +126,17 @@ void editorProcessKeypress(void)
 
 /*** init ***/
 
+void initEditor(void)
+{
+    if (getWindowSize(&E.screenrows, &E.screencols) == -1)
+        printAndExit("getWindowSize");
+}
+
 int main(void)
 {
 
     enableRawMode();
+    initEditor();
 
     while (1)
     {
