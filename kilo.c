@@ -73,22 +73,24 @@ char editorReadKey(void)
 
 int getCursorPosition(int *rows, int *cols)
 {
+    char buf[32];
+    unsigned int i = 0;
+
     if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4)
         return -1;
 
-    printf("\r\n");
-    char c;
-    while (read(STDIN_FILENO, &c, 1) == 1)
+    while (i < sizeof(buf) - 1)
     {
-        if (iscntrl(c))
-        {
-            printf("%d\r\n", c);
-        }
-        else
-        {
-            printf("%d ('%c')\r\n", c, c);
-        }
+        if (read(STDIN_FILENO, &buf[i], 1) != 1)
+            break;
+        if (buf[i] == 'R')
+            break;
+        i++;
     }
+    buf[i] = '\0';
+
+    // &buf[1]: '[36;131'
+    printf("\r\n&buf[1]: '%s'\r\n", &buf[1]);
 
     editorReadKey();
     return -1;
