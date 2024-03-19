@@ -91,16 +91,20 @@ int getCursorPosition(int *rows, int *cols)
 
     // &buf[1]: '[36;131'
     printf("\r\n&buf[1]: '%s'\r\n", &buf[1]);
+    if (buf[0] != '\x1b' || buf[1] != '[')
+        return -1;
 
-    editorReadKey();
-    return -1;
+    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2)
+        return -1;
+
+    return 0;
 }
 
 int getWindowSize(int *rows, int *cols)
 {
     struct winsize ws;
 
-    if (1 || ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
     {
         if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12)
             return -1;
