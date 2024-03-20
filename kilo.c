@@ -121,6 +121,12 @@ int getWindowSize(int *rows, int *cols)
 }
 
 /*** append buffer ***/
+/*
+An append buffer consists of a pointer to our buffer in memory, and a length.
+We define an ABUF_INIT constant which represents an empty buffer. This acts as a constructor for our abuf type.
+
+
+*/
 
 struct abuf
 {
@@ -133,6 +139,17 @@ struct abuf
         NULL, 0   \
     }
 
+/*
+To append a string s to an abuf, the first thing we do is make sure we allocate enough memory to hold the new string.
+We ask realloc() to give us a block of memory that is the size of the current string plus the size of the string
+we are appending.
+realloc() will either extend the size of the block of memory we already have allocated,
+ or it will take care of free()ing the current block of memory
+ and allocating a new block of memory somewhere else that is big enough for our new string.
+
+Then we use memcpy() to copy the string s after the end of the current data in the buffer,
+and we update the pointer and length of the abuf to the new values.
+*/
 void abAppend(struct abuf *ab, const char *s, int len)
 {
     char *new = realloc(ab->b, ab->len + len);
@@ -151,27 +168,30 @@ void abFree(struct abuf *ab)
 
 /*** output ***/
 
-void editorDrawRows(void)
+void editorDrawRows(struct abuf *ab)
 {
     int y;
     for (y = 0; y < E.screenrows; y++)
     {
-        write(STDOUT_FILENO, "~", 1);
+        abAppend(ab, "~", 1);
         if (y < E.screenrows - 1)
         {
-            write(STDOUT_FILENO, "\r\n", 2);
+            abAppend(ab, "\r\n", 2);
         }
     }
 }
 
 void editorRefreshSceen(void)
 {
-    write(STDOUT_FILENO, "\x1b[2J", 4);
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    struct abuf ab = ABUF_INIT;
+    abAppend(&ab, "\x1b[2J", 4);
+    abAppend(&ab, "\x1b[H", 3);
 
-    editorDrawRows();
+    editorDrawRows(&ab);
+    abAppend(&ab, "\x1b[H", 3);
 
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    write(STDOUT_FILENO, ab.b, ab.len);
+    abFree(&ab);
 }
 
 /*** input ***/
