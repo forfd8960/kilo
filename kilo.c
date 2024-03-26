@@ -18,6 +18,11 @@
 
 struct editorConfig
 {
+    /*
+    keep track of cursor's x and y position
+    E.cx is the horizontal coordinate of the cursor (the column) and E.cy is the vertical coordinate (the row)
+    */
+    int cx, cy;
     int screenrows;
     int screencols;
     struct termios orig_termios;
@@ -240,6 +245,9 @@ void editorProcessKeypress(void)
 
 void initEditor(void)
 {
+    // init cx and cy = 0, we want the cursor to start at the top-left of the screen.
+    E.cx = 0;
+    E.cy = 0;
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         printAndExit("getWindowSize");
 }
