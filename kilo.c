@@ -11,6 +11,7 @@
 #include <ctype.h>
 
 /*** defines ***/
+#define KILO_VERSION "0.0.1"
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 /*** data ***/
@@ -173,7 +174,28 @@ void editorDrawRows(struct abuf *ab)
     int y;
     for (y = 0; y < E.screenrows; y++)
     {
-        abAppend(ab, "~", 1);
+        if (y == E.screenrows / 3)
+        {
+            char welcome[88];
+            int welLen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version: %s", KILO_VERSION);
+            if (welLen > E.screencols)
+                welLen = E.screencols;
+
+            int padding = (E.screencols - welLen) / 2;
+            if (padding)
+            {
+                abAppend(ab, "~", 1);
+                padding--;
+            }
+            while (padding--)
+                abAppend(ab, " ", 1);
+
+            abAppend(ab, welcome, welLen);
+        }
+        else
+        {
+            abAppend(ab, "~", 1);
+        }
 
         // clear each line
         abAppend(ab, "\x1b[K", 3);
