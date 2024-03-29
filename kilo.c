@@ -59,8 +59,8 @@ void enableRawMode(void)
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
     // set a timeout for read, so read() returns if it doesn't get any input for a certain amount of time.
-    raw.c_cc[VMIN] = 0;   // set to 0, so that read returns as soon as there is any input to be read.
-    raw.c_cc[VTIME] = 10; // set 1/10 seconds, 100 milliseconds.
+    raw.c_cc[VMIN] = 0;    // set to 0, so that read returns as soon as there is any input to be read.
+    raw.c_cc[VTIME] = 100; // set 1/100 seconds, 10 milliseconds.
 
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 1)
         printAndExit("tcsetattr");
@@ -224,13 +224,35 @@ void editorRefreshSceen(void)
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
     abAppend(&ab, buf, strlen(buf));
 
-    abAppend(&ab, "\x1b[?25H", 6);
+    abAppend(&ab, "\x1b[?25h", 6);
 
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);
 }
 
 /*** input ***/
+
+void editorMoveCursor(char key)
+{
+    switch (key)
+    {
+    case 'a':
+        E.cx--;
+        break;
+    case 'd':
+        E.cx++;
+        break;
+    case 'w':
+        E.cy--;
+        break;
+    case 's':
+        E.cy++;
+        break;
+
+    default:
+        break;
+    }
+}
 
 void editorProcessKeypress(void)
 {
@@ -242,6 +264,13 @@ void editorProcessKeypress(void)
         write(STDOUT_FILENO, "\x1b[2J", 4);
         write(STDOUT_FILENO, "\x1b[H", 3);
         exit(0);
+        break;
+
+    case 'w':
+    case 's':
+    case 'a':
+    case 'd':
+        editorMoveCursor(c);
         break;
     }
 }
