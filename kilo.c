@@ -16,10 +16,10 @@
 
 enum editorKey
 {
-    ARROW_LEFT = 'a',
-    ARROW_RIGHT = 'd',
-    ARROW_UP = 'w',
-    ARROW_DOWN = 's'
+    ARROW_LEFT = 1000,
+    ARROW_RIGHT,
+    ARROW_UP,
+    ARROW_DOWN
 };
 
 /*** data ***/
@@ -67,14 +67,14 @@ void enableRawMode(void)
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
     // set a timeout for read, so read() returns if it doesn't get any input for a certain amount of time.
-    raw.c_cc[VMIN] = 0;    // set to 0, so that read returns as soon as there is any input to be read.
-    raw.c_cc[VTIME] = 100; // set 1/100 seconds, 10 milliseconds.
+    raw.c_cc[VMIN] = 0;     // set to 0, so that read returns as soon as there is any input to be read.
+    raw.c_cc[VTIME] = 1000; // set 1/1000 seconds, 1 milliseconds.
 
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 1)
         printAndExit("tcsetattr");
 }
 
-char editorReadKey(void)
+int editorReadKey(void)
 {
     char c;
     int nread;
@@ -98,13 +98,13 @@ char editorReadKey(void)
             switch (seq[1])
             {
             case 'A':
-                return ARROW_UP;
+                return ARROW_LEFT;
             case 'B':
                 return ARROW_DOWN;
             case 'C':
                 return ARROW_RIGHT;
             case 'D':
-                return ARROW_LEFT;
+                return ARROW_UP;
             }
         }
 
@@ -268,21 +268,33 @@ void editorRefreshSceen(void)
 
 /*** input ***/
 
-void editorMoveCursor(char key)
+void editorMoveCursor(int key)
 {
     switch (key)
     {
-    case 'a':
-        E.cx--;
+    case ARROW_UP:
+        if (E.cx != 0)
+        {
+            E.cx--;
+        }
         break;
-    case 'd':
-        E.cx++;
+    case ARROW_RIGHT:
+        if (E.cx != E.screencols - 1)
+        {
+            E.cx++;
+        }
         break;
-    case 'w':
-        E.cy--;
+    case ARROW_LEFT:
+        if (E.cy != 0)
+        {
+            E.cy--;
+        }
         break;
-    case 's':
-        E.cy++;
+    case ARROW_DOWN:
+        if (E.cy != E.screenrows - 1)
+        {
+            E.cy++;
+        }
         break;
 
     default:
@@ -292,7 +304,7 @@ void editorMoveCursor(char key)
 
 void editorProcessKeypress(void)
 {
-    char c = editorReadKey();
+    int c = editorReadKey();
 
     switch (c)
     {
