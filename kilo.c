@@ -24,6 +24,7 @@ enum editorKey
     PAGE_DOWN,
     HOME_KEY,
     END_KEY,
+    DEL_KEY,
 };
 
 /*** data ***/
@@ -110,6 +111,8 @@ int editorReadKey(void)
                     {
                     case '1':
                         return HOME_KEY; // <esc>[1~
+                    case '3':
+                        return DEL_KEY; // <esc>[3~
                     case '4':
                         return END_KEY; // <esc>[4~
                     case '5':           // page up: `\x1b[5~`
