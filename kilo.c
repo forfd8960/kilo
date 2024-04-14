@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -29,6 +30,13 @@ enum editorKey
 
 /*** data ***/
 
+// erow: storing a row of text in our editor.
+typedef struct erow
+{
+    int size;
+    char *chars;
+} erow;
+
 struct editorConfig
 {
     /*
@@ -38,6 +46,10 @@ struct editorConfig
     int cx, cy;
     int screenrows;
     int screencols;
+    int numrows;
+
+    // stores a line of text as a pointer to the dynamically-allocated character data and a length
+    erow row;
     struct termios orig_termios;
 };
 
@@ -209,6 +221,19 @@ int getWindowSize(int *rows, int *cols)
         *cols = ws.ws_col;
         return 0;
     }
+}
+
+/*** file io ***/
+void editorOpen(void)
+{
+    char *line = "Hello, World!";
+    ssize_t linelen = 13;
+
+    E.row.size = linelen;
+    E.row.chars = malloc(linelen + 1);
+    memcpy(E.row.chars, line, linelen);
+    E.row.chars[linelen] = '\0';
+    E.numrows = 1;
 }
 
 /*** append buffer ***/
@@ -396,6 +421,7 @@ void initEditor(void)
     // init cx and cy = 0, we want the cursor to start at the top-left of the screen.
     E.cx = 0;
     E.cy = 0;
+    E.numrows = 0;
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         printAndExit("getWindowSize");
 }
@@ -405,6 +431,7 @@ int main(void)
 
     enableRawMode();
     initEditor();
+    editorOpen();
 
     while (1)
     {
