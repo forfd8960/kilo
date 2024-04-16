@@ -49,7 +49,7 @@ struct editorConfig
     int numrows;
 
     // stores a line of text as a pointer to the dynamically-allocated character data and a length
-    erow row;
+    erow *row;
     struct termios orig_termios;
 };
 
@@ -223,6 +223,20 @@ int getWindowSize(int *rows, int *cols)
     }
 }
 
+/*** row operations ***/
+
+void editorAppendRow(char *s, size_t len)
+{
+    E.row = realloc(E.row, sizeof(erow) * (E.numrows + 1));
+
+    int at = E.numrows;
+    E.row[at].size = len;
+    E.row[at].chars = malloc(len + 1);
+    memcpy(E.row[at].chars, s, len);
+    E.row[at].chars[len] = '\0';
+    E.numrows++;
+}
+
 /*** file io ***/
 
 // let’s allow the user to open an actual file. We’ll read and display the first line of the file.
@@ -240,12 +254,7 @@ void editorOpen(char *filename)
     {
         while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
             linelen--;
-
-        E.row.size = linelen;
-        E.row.chars = malloc(linelen + 1);
-        memcpy(E.row.chars, line, linelen);
-        E.row.chars[linelen] = '\0';
-        E.numrows = 1;
+        editorAppendRow(line, linelen);
     }
 
     free(line);
@@ -308,7 +317,7 @@ void editorDrawRows(struct abuf *ab)
 
         if (y >= E.numrows)
         {
-            if (y == E.screenrows / 3)
+            if (E.numrows == 0 && y == E.screenrows / 3)
             {
                 char welcome[88];
                 int welLen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version: %s", KILO_VERSION);
@@ -449,6 +458,7 @@ void initEditor(void)
     E.cx = 0;
     E.cy = 0;
     E.numrows = 0;
+    E.row = NULL;
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         printAndExit("getWindowSize");
 }
